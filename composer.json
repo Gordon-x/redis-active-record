@@ -2,7 +2,7 @@
   "name": "gordon/redis-active-record",
   "description": "redis-active-record",
   "minimum-stability": "alpha",
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "authors": [
     {
       "name": "gordon",
@@ -16,14 +16,6 @@
     }
   },
   "require": {
-    "php": ">=7.0",
-    "fxp/composer-asset-plugin": "^v1.4.0",
     "yiisoft/yii2-redis": "^2.0.6"
-  },
-  "extra": {
-    "asset-installer-paths": {
-      "npm-asset-library": "vendor/npm",
-      "bower-asset-library": "vendor/bower"
-    }
   }
 }
