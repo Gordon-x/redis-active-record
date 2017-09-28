@@ -20,7 +20,7 @@ use yii\redis\ActiveQuery as YiiActiveQuery;
 
 /**
  * Class ActiveQuery
- * @package common\dal\dao\abs
+ * @package RedisActiveRecord
  *
  * @property ActiveRecord $modelClass
  */

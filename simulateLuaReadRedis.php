@@ -14,6 +14,10 @@ use \yii\db\Exception;
 use yii\base\NotSupportedException;
 use yii\db\Expression;
 
+/**
+ * Class simulateLuaReadRedis
+ * @package RedisActiveRecord
+ */
 class simulateLuaReadRedis
 {
     /**
@@ -371,7 +375,7 @@ class simulateLuaReadRedis
                 $method = $builders[$operator];
                 array_shift($condition);
 
-                return $this->$method($operator, $condition);
+                return call_user_func_array([$this, $method], [$operator, $condition]);
             } else {
                 throw new Exception('Found unknown operator in query: ' . $operator);
             }
