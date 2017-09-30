@@ -65,13 +65,23 @@ class StreamConnection implements Connection
         return $this->conn !== null;
     }
 
-    public function send()
+    public function send(Command $command)
     {
-        // TODO: Implement send() method.
+        $stream_contents = $command->getCommands();
+        fwrite($this->conn, $stream_contents);
+        return $this;
     }
 
-    public function accept()
+    public function accept(Command $command)
     {
-        // TODO: Implement accept() method.
+        $stream_contents = $command->getCommands();
+        return $this->response($stream_contents);
+    }
+
+    private function response($commands)
+    {
+        if (($line = fgets($this->conn)) === false) {
+            throw new ErrorException('读取数据失败，Command:'.$commands);
+        }
     }
 }

@@ -15,4 +15,9 @@ class Command
     {
 
     }
+
+    public function getCommands()
+    {
+        return '';
+    }
 }

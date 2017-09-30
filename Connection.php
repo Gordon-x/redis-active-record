@@ -17,9 +17,9 @@ interface Connection
 
     public function isActive();
 
-    public function send();
+    public function send(Command $command);
 
-    public function accept();
+    public function accept(Command $command);
 
     public function auth();
 
