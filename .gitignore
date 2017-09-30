@@ -81,3 +81,5 @@ themes/classic/views/
 composer.lock
 
 vendor
+
+.idea
