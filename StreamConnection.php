@@ -9,8 +9,6 @@
 namespace RedisActiveRecord;
 
 
-use yii\base\ErrorException;
-
 class StreamConnection implements Connection
 {
     public $host = 'localhost';
@@ -39,7 +37,7 @@ class StreamConnection implements Connection
         if ($this->isActive()) {
             return true;
         }
-        throw new ErrorException('Connection Failed! MSG:'.$error_no.';'.$err_msg);
+        throw new \Exception('Connection Failed! MSG:'.$error_no.';'.$err_msg, 500);
     }
 
     public function close()
@@ -72,7 +70,7 @@ class StreamConnection implements Connection
     private function response($commands)
     {
         if (($line = fgets($this->conn)) === false) {
-            throw new ErrorException('读取数据失败，Command:'.$commands);
+            throw new \Exception('读取数据失败，Command:'.$commands, 500);
         }
 
         $type = $line{0};
