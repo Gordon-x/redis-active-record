@@ -11,24 +11,24 @@ namespace RedisActiveRecord;
 
 class NetIO
 {
-    private $conn = null;
-    private $command = null;
+    /**
+     * @var Connection
+     */
+    private $conn;
 
     public function __construct(Connection $conn)
     {
         $this->conn = $conn;
     }
 
-    public function init()
+    public function execute(Command $command)
     {
-
+        $this->conn->send($command);
+        return $this->response($command);
     }
 
-    public function execute()
+    private function response(Command $command)
     {
-    }
-
-    private function response()
-    {
+        return $this->conn->accept($command);
     }
 }

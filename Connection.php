@@ -20,8 +20,4 @@ interface Connection
     public function send(Command $command);
 
     public function accept(Command $command);
-
-    public function auth();
-
-    public function selectDB();
 }

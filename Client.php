@@ -14,6 +14,8 @@ namespace RedisActiveRecord;
  * @package RedisActiveRecord
  *
  * @method pipeline();
+ * @method auth(array $auth = []);
+ * @method select(array $db = []);
  */
 class Client
 {
@@ -25,7 +27,12 @@ class Client
         self::DEFAULT_CONNECTION => StreamConnection::class
     ];
 
-    private $db = null;
+    /**
+     * @var NetIO
+     */
+    private $io;
+
+    private $Command;
 
     /**
      * REDIS COMMAND
@@ -231,10 +238,29 @@ class Client
     public function __construct()
     {
         $conn = self::$conn_map[$this->connection] ?? self::$conn_map[self::DEFAULT_CONNECTION];
-        $this->db = new NetIO(new $conn);
+        $this->io = new NetIO(new $conn);
+        $this->Command = new Command();
+        $this->init();
     }
 
-    public function __call($name, $arguments)
+    private function init()
     {
+        echo $this->auth(['74946443']);
+        echo $this->select(['0']);
+    }
+
+    public function __call($name, array $params = [])
+    {
+        if (!in_array(strtoupper($name), $this->redisCommands)) {
+            throw new \Exception('此命令不存在', 500);
+        }
+        return $this->executeCommand($name, $params);
+    }
+
+    public function executeCommand($name, array $params = [])
+    {
+        $commandName = strtoupper($name);
+        $this->Command->create($commandName, $params);
+        return $this->io->execute($this->Command->getCommands());
     }
 }

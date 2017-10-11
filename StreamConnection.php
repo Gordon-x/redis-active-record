@@ -35,20 +35,11 @@ class StreamConnection implements Connection
             $this->connectionTimeout,
             $this->socketClientFlags
         );
+
         if ($this->isActive()) {
             return true;
         }
         throw new ErrorException('Connection Failed! MSG:'.$error_no.';'.$err_msg);
-    }
-
-    public function auth()
-    {
-        // TODO: Implement auth() method.
-    }
-
-    public function selectDB()
-    {
-        // TODO: Implement selectDB() method.
     }
 
     public function close()
@@ -82,6 +73,46 @@ class StreamConnection implements Connection
     {
         if (($line = fgets($this->conn)) === false) {
             throw new ErrorException('读取数据失败，Command:'.$commands);
+        }
+
+        $type = $line{0};
+        $line = mb_substr($line, 1, -2, '8bit');
+        switch ($type) {
+            case '+': // Status reply
+                if ($line === 'OK' || $line === 'PONG') {
+                    return true;
+                } else {
+                    return $line;
+                }
+            case '-': // Error reply
+                throw new \Exception("Redis error: " . $line . "\nRedis command was: " . $commands, 500);
+            case ':': // Integer reply
+                return $line;
+            case '$': // Bulk replies
+                if ($line == '-1') {
+                    return null;
+                }
+
+                $length = (int)$line + 2;
+                $data = '';
+                while ($length > 0) {
+                    if (($block = fread($sock, $length)) === false) {
+                        throw new \Exception("Failed to read from socket.\nRedis command was: " . $commands, 500);
+                    }
+                    $data .= $block;
+                    $length -= mb_strlen($block, '8bit');
+                }
+                return mb_substr($data, 0, -2, '8bit');
+            case '*': // Multi-bulk replies
+                $count = (int)$line;
+                $data = [];
+                for ($i = 0; $i < $count; $i++) {
+                    $data[] = $this->response($commands);
+                }
+
+                return $data;
+            default:
+                throw new \Exception('Received illegal data from redis: ' . $line . "\nRedis command was: " . $commands, 500);
         }
     }
 }
