@@ -19,14 +19,14 @@ class StreamConnection implements Connection
     public $dataTimeout = 60;
     public $socketClientFlags = STREAM_CLIENT_CONNECT;
 
-    private $conn = null;
+    private $stream = null;
 
     public function connection()
     {
         if ($this->isActive()) {
             return true;
         }
-        $this->conn = stream_socket_client(
+        $this->stream = stream_socket_client(
             'tcp://' . $this->host . ':' . $this->port,
             $error_no,
             $err_msg,
@@ -44,20 +44,20 @@ class StreamConnection implements Connection
     {
         if (!$this->isActive()) {
             //TODO QUIT
-            stream_socket_shutdown($this->conn, STREAM_SHUT_RDWR);
-            $this->conn = null;
+            stream_socket_shutdown($this->stream, STREAM_SHUT_RDWR);
+            $this->stream = null;
         }
     }
 
     public function isActive()
     {
-        return $this->conn !== null;
+        return $this->stream !== null;
     }
 
     public function send(Command $command)
     {
         $stream_contents = $command->getCommands();
-        fwrite($this->conn, $stream_contents);
+        fwrite($this->stream, $stream_contents);
         return $this;
     }
 
@@ -69,7 +69,7 @@ class StreamConnection implements Connection
 
     private function response($commands)
     {
-        if (($line = fgets($this->conn)) === false) {
+        if (($line = fgets($this->stream)) === false) {
             throw new \Exception('读取数据失败，Command:'.$commands, 500);
         }
 
@@ -94,7 +94,7 @@ class StreamConnection implements Connection
                 $length = (int)$line + 2;
                 $data = '';
                 while ($length > 0) {
-                    if (($block = fread($sock, $length)) === false) {
+                    if (($block = fread($this->stream, $length)) === false) {
                         throw new \Exception("Failed to read from socket.\nRedis command was: " . $commands, 500);
                     }
                     $data .= $block;

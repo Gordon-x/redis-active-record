@@ -19,6 +19,7 @@ class NetIO
     public function __construct(Connection $conn)
     {
         $this->conn = $conn;
+        $this->conn->connection();
     }
 
     public function execute(Command $command)
