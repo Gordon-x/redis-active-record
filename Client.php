@@ -14,31 +14,38 @@ namespace RedisActiveRecord;
  * @package RedisActiveRecord
  *
  * @method pipeline();
- * @method auth(array $auth = []);
- * @method select(array $db = []);
+ * @method auth($auth);
+ * @method select($db);
+ * @method get($name);
+ * @method set($name, $value);
+ * @method lrange($name, $start, $end);
  */
 class Client
 {
-    const DEFAULT_CONNECTION = 'stream';
+    public $bridge = StreamConnection::class;
 
-    public $connection = self::DEFAULT_CONNECTION;
-
-    private static $conn_map = [
-        self::DEFAULT_CONNECTION => StreamConnection::class
-    ];
+    public $host = 'localhost';
+    public $port = '6379';
+    public $auth = null;
+    public $database = 0;
+    public $connectionTimeout = 60;
+    public $dataTimeout = 60;
+    private $options = [];
 
     /**
      * @var NetIO
      */
     private $io;
 
+    /**
+     * @var Command
+     */
     private $Command;
 
     /**
      * REDIS COMMAND
-     * 此数组从yii2-redis Connection.php中复制
+     *
      * 去除CONFIG, INFO命令
-     * 去除EVAL, EVALSHA命令,适应不支持此命令的云Redis
      * @var array
      */
     public $redisCommands = [
@@ -235,18 +242,35 @@ class Client
         'ZSCAN', // Incrementally iterate sorted sets elements and associated scores
     ];
 
-    public function __construct()
+    protected function init()
     {
-        $conn = self::$conn_map[$this->connection] ?? self::$conn_map[self::DEFAULT_CONNECTION];
-        $this->io = new NetIO(new $conn);
-        $this->Command = new Command();
-        $this->init();
+        $this->setParams();
+        $this->io->connect();
+        if ($this->auth) {
+            $this->auth($this->auth);
+        }
+        $this->select($this->database);
     }
 
-    private function init()
+    private function setParams()
     {
-        echo $this->auth(['74946443']);
-        echo $this->select(['0']);
+
+    }
+
+    public function __set($name, $value)
+    {
+        $this->options[$name] = $value;
+    }
+
+    private function connect()
+    {
+        if ($this->io) {
+            return true;
+        }
+        $this->io = new NetIO(new $this->bridge);
+        $this->Command = new Command();
+        $this->init();
+        return true;
     }
 
     public function __call($name, array $params = [])
@@ -259,6 +283,7 @@ class Client
 
     public function executeCommand($name, array $params = [])
     {
+        $this->connect();
         $commandName = strtoupper($name);
         $this->Command->create($commandName, $params);
         return $this->io->execute($this->Command->getCommands());

@@ -19,6 +19,15 @@ class NetIO
     public function __construct(Connection $conn)
     {
         $this->conn = $conn;
+    }
+
+    public function __set($name, $value)
+    {
+        $this->conn->$name = $value;
+    }
+
+    public function connect()
+    {
         $this->conn->connection();
     }
 
